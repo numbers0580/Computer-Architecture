@@ -7,7 +7,17 @@ class CPU:
 
     def __init__(self):
         """Construct a new CPU."""
-        pass
+        self.ram = [0] * 256
+        self.reg = [0] * 8
+        self.pc = 0
+        self.reg[7] = 0xf4
+        self.fl = 0
+
+    def ram_read(self, address):
+        return self.ram[address]
+
+    def ram_write(self, value, address):
+        self.ram[address] = value
 
     def load(self):
         """Load a program into memory."""
@@ -37,6 +47,14 @@ class CPU:
         if op == "ADD":
             self.reg[reg_a] += self.reg[reg_b]
         #elif op == "SUB": etc
+        elif op == "DEC":
+            self.reg[reg_a] -= 1
+        elif op == "INC":
+            self.reg[reg_a] += 1
+        elif op == "MUL":
+            self.reg[reg_a] *= self.reg[reg_b]
+        elif op == "SUB":
+            self.reg[reg_a] -= self.reg[reg_b]
         else:
             raise Exception("Unsupported ALU operation")
 
@@ -62,4 +80,124 @@ class CPU:
 
     def run(self):
         """Run the CPU."""
-        pass
+        
+        ADD  = 0b10100000
+        AND  = 0b10101000
+        CALL = 0b01010000
+        CMP  = 0b10100111
+        DEC  = 0b01100110
+        DIV  = 0b10100011
+        HLT  = 0b00000001
+        INC  = 0b01100101
+        INT  = 0b01010010
+        IRET = 0b00010011
+        JEQ  = 0b01010101
+        JGE  = 0b01011010
+        JGT  = 0b01010111
+        JLE  = 0b01011001
+        JLT  = 0b01011000
+        JMP  = 0b01010100
+        JNE  = 0b01010110
+        LD   = 0b10000011
+        LDI  = 0b10000010
+        MOD  = 0b10100100
+        MUL  = 0b10100010
+        NOP  = 0b00000000
+        NOT  = 0b01101001
+        OR   = 0b10101010
+        POP  = 0b01000110
+        PRA  = 0b01001000
+        PRN  = 0b01000111
+        PUSH = 0b01000101
+        RET  = 0b00010001
+        SHL  = 0b10101100
+        SHR  = 0b10101101
+        ST   = 0b10000100
+        SUB  = 0b10100001
+        XOR  = 0b10101011
+
+        running = True
+
+        while running:
+            inst = self.ram_read(self.pc)
+            opA = self.ram_read(self.pc + 1) # There are some instructions that may - at most - need two values
+            opB = self.ram_read(self.pc + 2) # following the instruction. Storing in opA & opB, but may not always be needed.
+
+            # Listing ALL of the possible instructions found in LS8-spec, but most will likely be filled with "pass" for now
+            if inst == ADD:
+                self.alu("ADD", opA, opB)
+                self.pc += 3
+            elif inst == AND:
+                pass
+            elif inst == CALL:
+                pass
+            elif inst == CMP:
+                pass
+            elif inst == DEC:
+                self.alu("DEC", opA, 1)
+                self.pc += 2
+            elif inst == DIV:
+                pass
+            elif inst == HLT:
+                running = False
+            elif inst == INC:
+                self.alu("INC", opA, 1)
+                self.pc += 2
+            elif inst == INT:
+                pass
+            elif inst == IRET:
+                pass
+            elif inst == JEQ:
+                pass
+            elif inst == JGE:
+                pass
+            elif inst == JGT:
+                pass
+            elif inst == JLE:
+                pass
+            elif inst == JLT:
+                pass
+            elif inst == JMP:
+                pass
+            elif inst == JNE:
+                pass
+            elif inst == LD:
+                pass
+            elif inst == LDI:
+                self.reg[opA] = opB
+                self.pc += 3
+            elif inst == MOD:
+                pass
+            elif inst == MUL:
+                self.alu("MUL", opA, opB)
+                self.pc += 3
+            elif inst == NOP:
+                pass
+            elif inst == NOT:
+                pass
+            elif inst == OR:
+                pass
+            elif inst == POP:
+                pass
+            elif inst == PRA:
+                pass
+            elif inst == PRN:
+                print(self.reg[opA])
+                self.pc += 2
+            elif inst == PUSH:
+                pass
+            elif inst == RET:
+                pass
+            elif inst == SHL:
+                pass
+            elif inst == SHR:
+                pass
+            elif inst == ST:
+                pass
+            elif inst == SUB:
+                self.alu("SUB", opA, opB)
+                self.pc += 3
+            elif inst == XOR:
+                pass
+            else:
+                pass
