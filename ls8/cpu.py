@@ -24,21 +24,38 @@ class CPU:
 
         address = 0
 
+        try:
+            with open(sys.argv[1]) as f:
+                for line in f:
+                    if line == '' or line[0] == "#":
+                        continue
+                    try:
+                        strVal = line.split("#")[0]
+                        value = int(strVal, 2)
+                    except ValueError:
+                        print(f"Invalid Number: {strVal}")
+                        sys.exit(1)
+                    self.ram[address] = value
+                    address += 1
+        except ValueError:
+            print(f"File not found: {sys.argv[1]}")
+            sys.exit(2)
+
         # For now, we've just hardcoded a program:
 
-        program = [
-            # From print8.ls8
-            0b10000010, # LDI R0,8
-            0b00000000,
-            0b00001000,
-            0b01000111, # PRN R0
-            0b00000000,
-            0b00000001, # HLT
-        ]
+        # program = [
+        #     # From print8.ls8
+        #     0b10000010, # LDI R0,8
+        #     0b00000000,
+        #     0b00001000,
+        #     0b01000111, # PRN R0
+        #     0b00000000,
+        #     0b00000001, # HLT
+        # ]
 
-        for instruction in program:
-            self.ram[address] = instruction
-            address += 1
+        # for instruction in program:
+        #     self.ram[address] = instruction
+        #     address += 1
 
 
     def alu(self, op, reg_a, reg_b):
@@ -120,8 +137,8 @@ class CPU:
 
         while running:
             inst = self.ram_read(self.pc)
-            opA = self.ram_read(self.pc + 1) # There are some instructions that may - at most - need two values
-            opB = self.ram_read(self.pc + 2) # following the instruction. Storing in opA & opB, but may not always be needed.
+            opA = self.ram_read(self.pc + 1) # There are some instructions that may - at most - need two values following the instruction.
+            opB = self.ram_read(self.pc + 2) # Storing in opA & opB, but may not always be needed. Borrowed this idea from def trace() above
 
             # Listing ALL of the possible instructions found in LS8-spec, but most will likely be filled with "pass" for now
             if inst == ADD:
@@ -130,7 +147,10 @@ class CPU:
             elif inst == AND:
                 pass
             elif inst == CALL:
-                pass
+                self.reg[7] -= 1
+                pushToTop = self.reg[7]
+                self.ram[pushToTop] = self.pc + 2
+                self.pc = self.reg[opA]
             elif inst == CMP:
                 pass
             elif inst == DEC:
@@ -187,7 +207,9 @@ class CPU:
             elif inst == PUSH:
                 pass
             elif inst == RET:
-                pass
+                popped = self.reg[7]
+                self.pc = self.ram[popped]
+                self.reg[7] += 1
             elif inst == SHL:
                 pass
             elif inst == SHR:
@@ -200,4 +222,5 @@ class CPU:
             elif inst == XOR:
                 pass
             else:
-                pass
+                print(f"I don't know what {i} is!")
+                sys.exit(0)
