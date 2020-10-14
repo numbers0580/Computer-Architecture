@@ -13,11 +13,11 @@ class CPU:
         self.reg[7] = 0xf4
         self.fl = 0
 
-    def ram_read(self, address):
-        return self.ram[address]
+    def ram_read(self, addr):
+        return self.ram[addr]
 
-    def ram_write(self, value, address):
-        self.ram[address] = value
+    def ram_write(self, val, addr):
+        self.ram[addr] = val
 
     def load(self):
         """Load a program into memory."""
@@ -27,7 +27,8 @@ class CPU:
         try:
             with open(sys.argv[1]) as f:
                 for line in f:
-                    if line == '' or line[0] == "#":
+                    # The next line is similar to guided project, but I had to check if line == "\n" instead of line == '', since I use Windows
+                    if line == '\n' or line[0] == "#":
                         continue
                     try:
                         strVal = line.split("#")[0]
@@ -147,10 +148,7 @@ class CPU:
             elif inst == AND:
                 pass
             elif inst == CALL:
-                self.reg[7] -= 1
-                pushToTop = self.reg[7]
-                self.ram[pushToTop] = self.pc + 2
-                self.pc = self.reg[opA]
+                pass
             elif inst == CMP:
                 pass
             elif inst == DEC:
@@ -184,6 +182,7 @@ class CPU:
             elif inst == LD:
                 pass
             elif inst == LDI:
+                # Load value in addr B into addr A
                 self.reg[opA] = opB
                 self.pc += 3
             elif inst == MOD:
@@ -198,18 +197,32 @@ class CPU:
             elif inst == OR:
                 pass
             elif inst == POP:
-                pass
+                # Get value from top of stack (self.reg[7])
+                value = self.ram[self.reg[7]]
+
+                # Store value in a register
+                self.reg[opA] = value
+
+                # Increment stack pointer
+                self.reg[7] += 1
+                self.pc += 2
             elif inst == PRA:
                 pass
             elif inst == PRN:
                 print(self.reg[opA])
                 self.pc += 2
             elif inst == PUSH:
-                pass
+                # Decrement stack pointer
+                self.reg[7] -= 1
+
+                # Grab value from given register (opA)
+                value = self.reg[opA]
+
+                # Copy value onto stack
+                self.ram[self.reg[7]] = value
+                self.pc += 2
             elif inst == RET:
-                popped = self.reg[7]
-                self.pc = self.ram[popped]
-                self.reg[7] += 1
+                pass
             elif inst == SHL:
                 pass
             elif inst == SHR:
