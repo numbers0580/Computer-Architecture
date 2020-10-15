@@ -148,7 +148,9 @@ class CPU:
             elif inst == AND:
                 pass
             elif inst == CALL:
-                pass
+                self.reg[7] -= 1
+                self.ram[self.reg[7]] = self.pc + 2
+                self.pc = self.reg[opA]
             elif inst == CMP:
                 pass
             elif inst == DEC:
@@ -222,7 +224,8 @@ class CPU:
                 self.ram[self.reg[7]] = value
                 self.pc += 2
             elif inst == RET:
-                pass
+                self.pc = self.ram[self.reg[7]]
+                self.reg[7] += 1
             elif inst == SHL:
                 pass
             elif inst == SHR:
