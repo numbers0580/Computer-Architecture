@@ -69,19 +69,19 @@ class CPU:
         elif op == "CMP":
             # According to specs, the flag bits are 00000LGE = Less than, Greater than, Equals (1 for true, 0 for false)
             if self.reg[reg_a] == self.reg[reg_b]:
-                self.fl = self.fl | 0b00000001 # This binary-or value ensures the "true" flag at the end is enabled
+                self.fl = self.fl | 0b00000001 # This bitwise-or value ensures the "true" flag at the end is enabled
             else:
-                self.fl = self.fl & 0b11111110 # This binary-and value ensures the current values for the other flags don't change while turning off the flag at the end
+                self.fl = self.fl & 0b11111110 # This bitwise-and value ensures the current values for the other flags don't change while turning off the flag at the end
 
             if self.reg[reg_a] > self.reg[reg_b]:
-                self.fl = self.fl | 0b00000100 # See notes above explaining this
+                self.fl = self.fl | 0b00000010 # See notes above explaining this
             else:
-                self.fl = self.fl & 0b11111011 # Again, see notes above for explanations
+                self.fl = self.fl & 0b11111101 # Again, see notes above for explanations
 
             if self.reg[reg_a] < self.reg[reg_b]:
-                self.fl = self.fl | 0b00000010 # You know the routine by now
+                self.fl = self.fl | 0b00000100 # You know the routine by now
             else:
-                self.fl = self.fl & 0b11111101 # Yup.
+                self.fl = self.fl & 0b11111011 # Yup.
         elif op == "DEC":
             self.reg[reg_a] -= 1
         elif op == "DIV":
