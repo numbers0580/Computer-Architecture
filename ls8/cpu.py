@@ -64,15 +64,54 @@ class CPU:
 
         if op == "ADD":
             self.reg[reg_a] += self.reg[reg_b]
-        #elif op == "SUB": etc
+        elif op == "AND":
+            self.reg[reg_a] &= self.reg[reg_b]
+        elif op == "CMP":
+            # According to specs, the flag bits are 00000LGE = Less than, Greater than, Equals (1 for true, 0 for false)
+            if self.reg[reg_a] == self.reg[reg_b]:
+                self.fl = self.fl | 0b00000001 # This binary-or value ensures the "true" flag at the end is enabled
+            else:
+                self.fl = self.fl & 0b11111110 # This binary-and value ensures the current values for the other flags don't change while turning off the flag at the end
+
+            if self.reg[reg_a] > self.reg[reg_b]:
+                self.fl = self.fl | 0b00000100 # See notes above explaining this
+            else:
+                self.fl = self.fl & 0b11111011 # Again, see notes above for explanations
+
+            if self.reg[reg_a] < self.reg[reg_b]:
+                self.fl = self.fl | 0b00000010 # You know the routine by now
+            else:
+                self.fl = self.fl & 0b11111101 # Yup.
         elif op == "DEC":
             self.reg[reg_a] -= 1
+        elif op == "DIV":
+            if self.reg[reg_b] != 0:
+                self.reg[reg_a] /= self.reg[reg_b]
+            else:
+                print("Cannot divide by zero!")
+                sys.exit(1)
         elif op == "INC":
             self.reg[reg_a] += 1
+        elif op == "MOD":
+            if self.reg[reg_b] != 0:
+                self.reg[reg_a] = self.reg[reg_a] % self.reg[reg_b]
+            else:
+                print("Cannot mod by zero!")
+                sys.exit(1)
+        elif op == "NOT":
+            self.reg[reg_a] = 0b11111111 - self.reg[reg_a]
         elif op == "MUL":
             self.reg[reg_a] *= self.reg[reg_b]
+        elif op == "OR":
+            self.reg[reg_a] |= self.reg[reg_b]
+        elif op == "SHL":
+            self.reg[reg_a] = self.reg[reg_a] << self.reg[reg_b]
+        elif op == "SHR":
+            self.reg[reg_a] = self.reg[reg_a] >> self.reg[reg_b]
         elif op == "SUB":
             self.reg[reg_a] -= self.reg[reg_b]
+        elif op == "XOR":
+            self.reg[reg_a] ^= self.reg[reg_b]
         else:
             raise Exception("Unsupported ALU operation")
 
@@ -146,18 +185,21 @@ class CPU:
                 self.alu("ADD", opA, opB)
                 self.pc += 3
             elif inst == AND:
-                pass
+                self.aly("AND", opA, opB)
+                self.pc += 3
             elif inst == CALL:
                 self.reg[7] -= 1
                 self.ram[self.reg[7]] = self.pc + 2
                 self.pc = self.reg[opA]
             elif inst == CMP:
-                pass
+                self.alu("CMP", opA, opB)
+                self.pc += 3
             elif inst == DEC:
                 self.alu("DEC", opA, 1)
                 self.pc += 2
             elif inst == DIV:
-                pass
+                self.alu("DIV", opA, opB)
+                self.pc += 3
             elif inst == HLT:
                 running = False
             elif inst == INC:
@@ -168,36 +210,56 @@ class CPU:
             elif inst == IRET:
                 pass
             elif inst == JEQ:
-                pass
+                # Similar to "JMP", but only if flag = 1, otherwise go to next instruction skipping over the address provided in opA
+                if self.fl & 0b00000001 == 0b00000001:
+                    self.pc = self.reg[opA]
+                else:
+                    self.pc += 2
             elif inst == JGE:
                 pass
             elif inst == JGT:
-                pass
+                # Similar to "JEQ", but checking the Greater-than flag instead of the Equals flag
+                if self.fl & 0b00000010 == 0b00000010:
+                    self.pc = self.reg[opA]
+                else:
+                    self.pc += 2
             elif inst == JLE:
                 pass
             elif inst == JLT:
-                pass
+                # Similar to "JEQ", but checking the Less-than flag instead of the the Equals flag
+                if self.fl & 0b00000100 == 0b00000100:
+                    self.pc = self.reg[opA]
+                else:
+                    self.pc += 2
             elif inst == JMP:
-                pass
+                self.pc = self.reg[opA]
             elif inst == JNE:
-                pass
+                # Similar to "JMP" and "JEQ", but this time only when flag = 0 instead of 1
+                if self.fl & 0b00000001 == 0b00000000:
+                    self.pc = self.reg[opA]
+                else:
+                    self.pc += 2
             elif inst == LD:
-                pass
+                self.reg[opA] = self.ram[opB]
+                self.pc += 3
             elif inst == LDI:
                 # Load value in addr B into addr A
                 self.reg[opA] = opB
                 self.pc += 3
             elif inst == MOD:
-                pass
+                self.alu("MOD", opA, opB)
+                self.pc += 3
             elif inst == MUL:
                 self.alu("MUL", opA, opB)
                 self.pc += 3
             elif inst == NOP:
-                pass
+                self.pc += 1
             elif inst == NOT:
-                pass
+                self.alu("NOT", opA, 0)
+                self.pc += 2
             elif inst == OR:
-                pass
+                self.alu("OR", opA, opB)
+                self.pc += 3
             elif inst == POP:
                 # Get value from top of stack (self.reg[7])
                 value = self.ram[self.reg[7]]
@@ -209,7 +271,9 @@ class CPU:
                 self.reg[7] += 1
                 self.pc += 2
             elif inst == PRA:
-                pass
+                # Use flush=True at end of print statement, according to the instructor
+                print(chr(self.reg[opA]), end='', flush=True)
+                self.pc += 2
             elif inst == PRN:
                 print(self.reg[opA])
                 self.pc += 2
@@ -227,16 +291,20 @@ class CPU:
                 self.pc = self.ram[self.reg[7]]
                 self.reg[7] += 1
             elif inst == SHL:
-                pass
+                self.alu("SHL", opA, opB)
+                self.pc += 3
             elif inst == SHR:
-                pass
+                self.alu("SHR", opA, opB)
+                self.pc += 3
             elif inst == ST:
-                pass
+                self.reg[opA] = self.reg[opB]
+                self.pc += 3
             elif inst == SUB:
                 self.alu("SUB", opA, opB)
                 self.pc += 3
             elif inst == XOR:
-                pass
+                self.alu("XOR", opA, opB)
+                self.pc += 3
             else:
                 print(f"I don't know what {i} is!")
                 sys.exit(0)
