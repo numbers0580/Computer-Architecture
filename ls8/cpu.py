@@ -216,7 +216,10 @@ class CPU:
                 else:
                     self.pc += 2
             elif inst == JGE:
-                pass
+                if self.fl & 0b00000011 != 0b00000000:
+                    self.pc = self.reg[opA]
+                else:
+                    self.pc += 2
             elif inst == JGT:
                 # Similar to "JEQ", but checking the Greater-than flag instead of the Equals flag
                 if self.fl & 0b00000010 == 0b00000010:
@@ -224,7 +227,10 @@ class CPU:
                 else:
                     self.pc += 2
             elif inst == JLE:
-                pass
+                if self.fl & 0b00000101 != 0b00000000:
+                    self.pc = self.reg[opA]
+                else:
+                    self.pc += 2
             elif inst == JLT:
                 # Similar to "JEQ", but checking the Less-than flag instead of the the Equals flag
                 if self.fl & 0b00000100 == 0b00000100:
